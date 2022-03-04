@@ -23,7 +23,14 @@ copies or substantial portions of the Software.
 
 // Inputs and outputs ----------------------------------------------------------------------------
 
+in  vec2 texcoord;
+in  vec2 lmcoord;
+in  vec4 glcolor;
+in  float ao;
+
 // Uniforms --------------------------------------------------------------------------------------
+
+uniform sampler2D tex;
 
 // Other global variables ------------------------------------------------------------------------
 
@@ -41,8 +48,14 @@ copies or substantial portions of the Software.
 // Main
 // ===============================================================================================
 
+/* RENDERTARGETS: 0 */
+
 void main() {
-    
+    vec4 albedo = texture2D(tex, texcoord) * glcolor;
+
+    vec3 color = albedo.rgb * ao;
+
+    gl_FragData[0] = vec4(color, albedo.a);
 }
 
 // ===============================================================================================
