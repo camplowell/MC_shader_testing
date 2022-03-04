@@ -1,33 +1,21 @@
-#define GBUFFER
-#define FRAGMENT
+/*
+MIT License
 
-// ===============================================================================================
-// Global variables
-// ===============================================================================================
+Copyright (c) 2022 Lowell Camp
 
-// Inputs and outputs ----------------------------------------------------------------------------
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-// Uniforms --------------------------------------------------------------------------------------
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+*/
+#version 410 compatibility
 
-// Other global variables ------------------------------------------------------------------------
-
-// ===============================================================================================
-// Imports
-// ===============================================================================================
-
-#include "/lib/common.glsl"
-
-// ===============================================================================================
-// Helper declarations
-// ===============================================================================================
-
-// ===============================================================================================
-// Main
-// ===============================================================================================
-
-void main() {
-    
-}
+#include "/surfaces/NAME.fsh"
 
 // ===============================================================================================
 // Helper implementations
