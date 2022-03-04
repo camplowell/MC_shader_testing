@@ -27,26 +27,30 @@ vec3 getNormal() {
   return normalize(gl_NormalMatrix * gl_Normal);
 }
 
+vec4 view2clip(vec3 viewPos) {
+  return gl_ProjectionMatrix * vec4(viewPos, 1.0);
+}
+
 #endif
 
 // ===============================================================================================
 // Base definitions
 // ===============================================================================================
 
-vec3 screen2clip(vec3 screenPos) {
+vec3 screen2ndc(vec3 screenPos) {
   return screenPos * 2.0 - 1.0;
 }
-vec3 clip2screen(vec3 clipPos) {
-  return clipPos * 0.5 + 0.5;
+vec3 ndc2screen(vec3 ndcPos) {
+  return ndcPos * 0.5 + 0.5;
 }
 
-vec3 clip2view(vec3 clipPos, mat4 projectionInverse) {
-  vec4 tmp = projectionInverse * vec4(clipPos, 1.0);
+vec3 ndc2view(vec3 ndcPos, mat4 projectionInverse) {
+  vec4 tmp = projectionInverse * vec4(ndcPos, 1.0);
   return tmp.xyz / tmp.w;
 }
-vec3 view2clip(vec3 viewPos, mat4 projection) {
-  vec4 clip = projection * vec4(viewPos, 1.0);
-  return clip.xyz / clip.w;
+vec3 view2ndc(vec3 viewPos, mat4 projection) {
+  vec4 ndc = projection * vec4(viewPos, 1.0);
+  return ndc.xyz / ndc.w;
 }
 
 vec3 view2eye(vec3 viewPos, mat4 modelViewInverse) {
@@ -80,8 +84,8 @@ vec3 feet2world(vec3 feetPos, vec3 playerPos) {
 
 // Player-space shorthand
 
-#define clip2view_p(_clipPos) clip2view(_clipPos, gbufferProjectionInverse)
-#define view2clip_p(_viewPos) view2clip(_viewPos, gbufferProjection)
+#define ndc2view_p(_ndcPos) ndc2view(_ndcPos, gbufferProjectionInverse)
+#define view2ndc_p(_viewPos) view2ndc(_viewPos, gbufferProjection)
 
 #define view2eye_p(_viewPos) view2eye(_viewPos, gbufferModelViewInverse)
 #define eye2view_p(_eyePos) eye2view(_eyePos, gbufferModelView)
