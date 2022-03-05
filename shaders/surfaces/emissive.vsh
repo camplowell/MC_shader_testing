@@ -24,7 +24,6 @@ copies or substantial portions of the Software.
 // Inputs and outputs ----------------------------------------------------------------------------
 
 out vec2 texcoord;
-out vec2 lmcoord;
 out vec4 glcolor;
 out float ao;
 
@@ -45,7 +44,6 @@ out float ao;
 vec3 getViewPos();
 vec4 getGlColor();
 float getAo();
-vec2 getLmCoord();
 
 // ===============================================================================================
 // Main
@@ -56,7 +54,6 @@ void main() {
     gl_Position = view2clip(viewPos);
 
     texcoord = getTexCoord();
-    lmcoord = getLmCoord();
     glcolor = getGlColor();
     ao = getAo();
 }

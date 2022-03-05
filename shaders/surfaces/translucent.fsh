@@ -15,7 +15,7 @@ copies or substantial portions of the Software.
 */
 
 #define GBUFFER
-#define VERTEX
+#define FRAGMENT
 
 // ===============================================================================================
 // Global variables
@@ -23,12 +23,15 @@ copies or substantial portions of the Software.
 
 // Inputs and outputs ----------------------------------------------------------------------------
 
-out vec2 texcoord;
-out vec2 lmcoord;
-out vec4 glcolor;
-out float ao;
+in  vec2 texcoord;
+in  vec2 lmcoord;
+in  vec4 glcolor;
+in  float ao;
 
 // Uniforms --------------------------------------------------------------------------------------
+
+uniform sampler2D tex;
+uniform sampler2D lightmap;
 
 // Other global variables ------------------------------------------------------------------------
 
@@ -42,23 +45,19 @@ out float ao;
 // Helper declarations
 // ===============================================================================================
 
-vec3 getViewPos();
-vec4 getGlColor();
-float getAo();
-vec2 getLmCoord();
-
 // ===============================================================================================
 // Main
 // ===============================================================================================
 
-void main() {
-    vec3 viewPos = getViewPos();
-    gl_Position = view2clip(viewPos);
+/* RENDERTARGETS: 0 */
 
-    texcoord = getTexCoord();
-    lmcoord = getLmCoord();
-    glcolor = getGlColor();
-    ao = getAo();
+void main() {
+    vec4 albedo = texture2D(tex, texcoord) * glcolor;
+
+    vec3 color = albedo.rgb * ao;
+    color *= texture2D(lightmap, lmcoord).rgb;
+
+    gl_FragData[0] = vec4(color, albedo.a);
 }
 
 // ===============================================================================================

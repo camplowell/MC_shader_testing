@@ -19,7 +19,7 @@ vec2 getTexCoord() {
   return (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 }
 
-vec2 getLmCoord() {
+vec2 modelLmCoord() {
   return (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 }
 
