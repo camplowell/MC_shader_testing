@@ -21,6 +21,8 @@ copies or substantial portions of the Software.
 // Local uniforms and constants
 // ===============================================================================================
 
+in vec3 at_velocity;
+
 // ===============================================================================================
 // Helper implementations
 // ===============================================================================================
@@ -39,4 +41,8 @@ float getAo() {
 
 vec2 getLmCoord() {
 	return modelLmCoord();
+}
+
+vec3 getPrevViewPos(vec3 viewPos) {
+	return viewPos - at_velocity;
 }

@@ -22,6 +22,7 @@ copies or substantial portions of the Software.
 // ===============================================================================================
 
 uniform ivec2 eyeBrightness;
+uniform vec3 previousCameraPosition;
 
 // ===============================================================================================
 // Helper implementations
@@ -42,4 +43,10 @@ float getAo() {
 vec2 getLmCoord() {
 	// Estimate brightness using the player's eye brightness
 	return eyeBrightness / 240.0;
+}
+
+vec3 getPrevViewPos(vec3 viewPos) {
+	vec3 feetPos = view2feet_p(viewPos);
+	vec3 prevFeetPos = feetPos + (cameraPosition - previousCameraPosition);
+	return feet2view(prevFeetPos, gbufferPreviousModelView);
 }

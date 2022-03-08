@@ -18,6 +18,12 @@ copies or substantial portions of the Software.
 #include "/surfaces/opaque.vsh"
 
 // ===============================================================================================
+// Local uniforms and constants
+// ===============================================================================================
+
+uniform vec3 previousCameraPosition;
+
+// ===============================================================================================
 // Helper implementations
 // ===============================================================================================
 
@@ -35,4 +41,10 @@ float getAo() {
 
 vec2 getLmCoord() {
 	return modelLmCoord();
+}
+
+vec3 getPrevViewPos(vec3 viewPos) {
+	vec3 feetPos = view2feet_p(viewPos);
+	vec3 prevFeetPos = feetPos + (cameraPosition - previousCameraPosition);
+	return feet2view(prevFeetPos, gbufferPreviousModelView);
 }

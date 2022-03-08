@@ -43,5 +43,6 @@ uniform int frameCounter;
 // ===============================================================================================
 
 #include "/lib/space.glsl"
+#include "/lib/random.glsl"
 
 #endif

@@ -13,9 +13,10 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
+#version 410 compatibility
 
-#define GBUFFER
-#define VERTEX
+#define COMPOSITE
+#define FRAGMENT
 
 // ===============================================================================================
 // Global variables
@@ -23,15 +24,11 @@ copies or substantial portions of the Software.
 
 // Inputs and outputs ----------------------------------------------------------------------------
 
-out vec2 texcoord;
-out vec2 lmcoord;
-out vec4 glcolor;
-out float ao;
-
-out vec3 viewPos;
-out vec3 prevViewPos;
+in  vec2 texcoord;
 
 // Uniforms --------------------------------------------------------------------------------------
+
+uniform sampler2D colortex9;
 
 // Other global variables ------------------------------------------------------------------------
 
@@ -40,31 +37,33 @@ out vec3 prevViewPos;
 // ===============================================================================================
 
 #include "/lib/common.glsl"
-#include "/lib/taa_jitter.glsl"
+#include "/lib/resampling.glsl"
 
 // ===============================================================================================
 // Helper declarations
 // ===============================================================================================
 
-vec3 getViewPos();
-vec3 getPrevViewPos(vec3 viewPos);
-vec4 getGlColor();
-float getAo();
-vec2 getLmCoord();
-
 // ===============================================================================================
 // Main
 // ===============================================================================================
 
-void main() {
-    viewPos = getViewPos();
-    prevViewPos = getPrevViewPos(viewPos);
-    gl_Position = jitter(view2clip(viewPos));
+/* 
+const int colortex0Format = RGB8;
+const int colortex3Format = RGB16F;
+const int colortex8Format = R32F;
+const bool colortex8Clear = false;
+const int colortex9Format = RGB16;
+const bool colortex9Clear = false;
+*/
 
-    texcoord = getTexCoord();
-    lmcoord = getLmCoord();
-    glcolor = getGlColor();
-    ao = getAo();
+void main() {
+    if (MC_RENDER_QUALITY == 1.0) {
+        ivec2 texel = ivec2(texcoord * vec2(viewWidth, viewHeight));
+        gl_FragData[0] = texelFetch(colortex9, texel, 0);
+    } else {
+        //gl_FragData[0] = texture2D(colortex9, texcoord);
+        gl_FragData[0] = vec4(resample_bspline(colortex9, texcoord), 1.0);
+    }
 }
 
 // ===============================================================================================

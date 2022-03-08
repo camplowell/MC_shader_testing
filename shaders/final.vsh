@@ -13,8 +13,9 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
+#version 410 compatibility
 
-#define GBUFFER
+#define COMPOSITE
 #define VERTEX
 
 // ===============================================================================================
@@ -24,12 +25,6 @@ copies or substantial portions of the Software.
 // Inputs and outputs ----------------------------------------------------------------------------
 
 out vec2 texcoord;
-out vec2 lmcoord;
-out vec4 glcolor;
-out float ao;
-
-out vec3 viewPos;
-out vec3 prevViewPos;
 
 // Uniforms --------------------------------------------------------------------------------------
 
@@ -40,31 +35,19 @@ out vec3 prevViewPos;
 // ===============================================================================================
 
 #include "/lib/common.glsl"
-#include "/lib/taa_jitter.glsl"
 
 // ===============================================================================================
 // Helper declarations
 // ===============================================================================================
-
-vec3 getViewPos();
-vec3 getPrevViewPos(vec3 viewPos);
-vec4 getGlColor();
-float getAo();
-vec2 getLmCoord();
 
 // ===============================================================================================
 // Main
 // ===============================================================================================
 
 void main() {
-    viewPos = getViewPos();
-    prevViewPos = getPrevViewPos(viewPos);
-    gl_Position = jitter(view2clip(viewPos));
+    gl_Position = model2clip();
 
     texcoord = getTexCoord();
-    lmcoord = getLmCoord();
-    glcolor = getGlColor();
-    ao = getAo();
 }
 
 // ===============================================================================================

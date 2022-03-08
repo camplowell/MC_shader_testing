@@ -18,6 +18,12 @@ copies or substantial portions of the Software.
 #include "/surfaces/emissive.vsh"
 
 // ===============================================================================================
+// Local uniforms and constants
+// ===============================================================================================
+
+in vec3 at_velocity;
+
+// ===============================================================================================
 // Helper implementations
 // ===============================================================================================
 
@@ -32,3 +38,8 @@ vec4 getGlColor() {
 float getAo() {
 	return 1.0;
 }
+
+vec3 getPrevViewPos(vec3 viewPos) {
+	return viewPos - at_velocity;
+}
+

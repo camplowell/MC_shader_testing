@@ -18,6 +18,12 @@ copies or substantial portions of the Software.
 #include "/surfaces/translucent.vsh"
 
 // ===============================================================================================
+// Local uniforms and constants
+// ===============================================================================================
+
+in vec3 previousCameraPosition;
+
+// ===============================================================================================
 // Helper implementations
 // ===============================================================================================
 
@@ -35,4 +41,10 @@ float getAo() {
 
 vec2 getLmCoord() {
 	return modelLmCoord();
+}
+
+vec3 getPrevViewPos(vec3 viewPos) {
+	vec3 feetPos = view2feet_p(viewPos);
+	vec3 prevFeetPos = feetPos + (previousCameraPosition - cameraPosition);
+	return feet2view(prevFeetPos, gbufferPreviousModelView);
 }

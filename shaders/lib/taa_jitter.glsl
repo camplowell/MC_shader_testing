@@ -13,38 +13,22 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
-#version 410 compatibility
 
-#include "/surfaces/translucent.vsh"
-
-// ===============================================================================================
-// Local uniforms and constants
-// ===============================================================================================
-
-uniform vec3 previousCameraPosition;
+#if !defined LIB_TAA_JITTER
+#define LIB_TAA_JITTER
 
 // ===============================================================================================
-// Helper implementations
+// Jittering
 // ===============================================================================================
 
-vec3 getViewPos() {
-	return model2view();
+vec2 getJitter() {
+    return (r2(frameCounter) * 2 - 1) / vec2(viewWidth, viewHeight);
 }
 
-vec4 getGlColor() {
-	return gl_Color;
+vec4 jitter(vec4 clipPos) {
+    return vec4(clipPos.xy + clipPos.w * getJitter(), clipPos.zw);
 }
 
-float getAo() {
-	return 1.0;
-}
+// Small separator -------------------------------------------------------------------------------
 
-vec2 getLmCoord() {
-	return modelLmCoord();
-}
-
-vec3 getPrevViewPos(vec3 viewPos) {
-	vec3 feetPos = view2feet_p(viewPos);
-	vec3 prevFeetPos = feetPos + (cameraPosition - previousCameraPosition);
-	return feet2view(prevFeetPos, gbufferPreviousModelView);
-}
+#endif

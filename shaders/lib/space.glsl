@@ -37,6 +37,11 @@ vec4 view2clip(vec3 viewPos) {
 // Base definitions
 // ===============================================================================================
 
+// Kneemund/Niemand's fast version from the Shaderlabs wiki
+float linearizeDepth(float depth) {
+    return (near * far) / (depth * (near - far) + far);
+}
+
 vec3 screen2ndc(vec3 screenPos) {
   return screenPos * 2.0 - 1.0;
 }
