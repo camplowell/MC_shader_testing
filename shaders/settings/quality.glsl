@@ -14,20 +14,16 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 */
 
-#if !defined LIB_TAA_JITTER
-#define LIB_TAA_JITTER
+#if !defined SETTINGS_TAA
+#define SETTINGS_TAA
 
 // ===============================================================================================
-// Jittering
+// Large separator
 // ===============================================================================================
 
-vec2 getJitter() {
-    return (r2(frameCounter) - 0.5) / vec2(viewWidth, viewHeight);
-}
+#define TAA_QUALITY 2 // Determines the quality of TAA sampling to apply [1 2 3]
 
-vec4 jitter(vec4 clipPos) {
-    return vec4(clipPos.xy + 2.0 * clipPos.w * getJitter(), clipPos.zw);
-}
+#define RESAMPLING_QUALITY 0 // Quality of upscaling for render quality of < 1 [0 1]
 
 // Small separator -------------------------------------------------------------------------------
 

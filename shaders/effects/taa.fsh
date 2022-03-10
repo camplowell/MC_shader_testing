@@ -26,14 +26,16 @@ copies or substantial portions of the Software.
 in  vec2 texcoord;
 in  vec2 counterJitter;
 
+in  mat2 cornerDepths;
+
 // Uniforms --------------------------------------------------------------------------------------
 
-uniform sampler2D colortex0;
-uniform sampler2D colortex3;
-uniform sampler2D colortex8;
-uniform sampler2D colortex9;
+uniform sampler2D colortex0; // Color
+uniform sampler2D colortex3; // Velocity
+uniform sampler2D depthtex0; // Depth
 
-uniform sampler2D depthtex0;
+uniform sampler2D colortex8; // Depth history
+uniform sampler2D colortex9; // Color history
 
 // Other global variables ------------------------------------------------------------------------
 
@@ -52,9 +54,11 @@ const ivec2 offsets[9] = ivec2[9](ivec2( 0, 0),
 // Helper declarations
 // ===============================================================================================
 
-void sampleCurrent(out vec3 velocity, out float depthMin, out float depth, out float depthMax);
+void sampleCurrent(vec2 pos, out vec3 velocity, out float depthMin, out float depth, out float depthMax);
 
-vec3 clipAndMix(sampler2D tex, ivec2 texel, vec3 col_p, float alpha);
+float getWeight(vec2 pos, vec2 prevPos, float depthMin, float depth, float depth_l, float depthMax, float depth_expected);
+
+vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weight);
 
 // ===============================================================================================
 // Main
@@ -63,65 +67,73 @@ vec3 clipAndMix(sampler2D tex, ivec2 texel, vec3 col_p, float alpha);
 /* RENDERTARGETS: 8,9 */
 
 void main() {
-    vec3 color_c = texture2D(colortex0, texcoord + counterJitter).rgb;
-    vec2 frameSize = vec2(viewWidth, viewHeight);
-
+    vec2 pos = texcoord + counterJitter;
+    //vec2 pos_col = ;
     vec3 velocity;
     float depthMin;
     float depth;
     float depthMax;
-    sampleCurrent(velocity, depthMin, depth, depthMax);
+    sampleCurrent(pos, velocity, depthMin, depth, depthMax);
 
     float depth_l = linearizeDepth(depth);
-    float depthErr_n = linearizeDepth(depthMin) - depth_l;
-    float depthErr_p = linearizeDepth(depthMax) - depth_l;
+    vec2 prevPos = texcoord + velocity.xy;
+    float depth_expected = depth + velocity.z;
+    float weight = getWeight(pos, prevPos, depthMin, depth, depth_l, depthMax, depth_expected);
 
-    vec3 screenPos_p = vec3(texcoord, depth) + velocity;
-
-    float depth_plx = linearizeDepth(screenPos_p.z);
-    float depth_pl = texture2D(colortex8, screenPos_p.xy, 0).x;
-    float depthErr = depth_pl - depth_plx;
-
-    float alpha_d = 1 - 16 * max(depthErr_n - depthErr, depthErr - depthErr_p);
-
-    float alpha = depthMin < 1.0 ? clamp(alpha_d, 0.0, 0.9) : 0.0;
-    if (any(bvec4(
-        lessThan(screenPos_p.xy, vec2(0)), 
-        greaterThan(screenPos_p.xy, vec2(1))
-    ))) {
-        alpha = 0.0;
-    }
-    //alpha /= 0.1 * max(0, depth_plx - depth_l) + 1;
+    vec3 color_p = getTAA(colortex0, colortex9, pos, prevPos, weight);
     
-    vec3 color_p = resample_bspline(colortex9, screenPos_p.xy);
-
-    color_p = clipAndMix(colortex0, ivec2(texcoord * frameSize), color_p, alpha);
-
     gl_FragData[0] = vec4(vec3(depth_l), 1.0);
     gl_FragData[1] = vec4(color_p, 1.0);
-    //gl_FragData[1] = vec4(vec3(alpha), 1.0);
+    //gl_FragData[1] = vec4(vec3(weight), 1.0);
+    //gl_FragData[1] = texture2D(colortex0, pos);
 }
 
 // ===============================================================================================
 // Helper implementations
 // ===============================================================================================
 
-void sampleCurrent(out vec3 velocity, out float depthMin, out float depth, out float depthMax) {
-    ivec2 pos = ivec2(texcoord * vec2(viewWidth, viewHeight));
+void sampleCurrent(vec2 pos, out vec3 velocity, out float depthMin, out float depth, out float depthMax) {
+    vec2 tex_s = vec2(viewWidth, viewHeight);
+    ivec2 pos_i = ivec2(pos * tex_s);
+
+    depth = texelFetch(depthtex0, pos_i + offsets[0], 0).x;
     
-    depth = texelFetch(depthtex0, pos + offsets[0], 0).x;
-    float d1 = texelFetch(depthtex0, pos + offsets[1], 0).x;
-    float d2 = texelFetch(depthtex0, pos + offsets[2], 0).x;
-    float d3 = texelFetch(depthtex0, pos + offsets[3], 0).x;
-    float d4 = texelFetch(depthtex0, pos + offsets[4], 0).x;
-    float d5 = texelFetch(depthtex0, pos + offsets[5], 0).x;
-    float d6 = texelFetch(depthtex0, pos + offsets[6], 0).x;
-    float d7 = texelFetch(depthtex0, pos + offsets[7], 0).x;
-    float d8 = texelFetch(depthtex0, pos + offsets[8], 0).x;
+#if TAA_QUALITY == 3
+    // Solid 3x3 neighborhood
+    float d1 = texelFetch(depthtex0, pos_i + offsets[1], 0).x;
+    float d2 = texelFetch(depthtex0, pos_i + offsets[2], 0).x;
+    float d3 = texelFetch(depthtex0, pos_i + offsets[3], 0).x;
+    float d4 = texelFetch(depthtex0, pos_i + offsets[4], 0).x;
+    float d5 = texelFetch(depthtex0, pos_i + offsets[5], 0).x;
+    float d6 = texelFetch(depthtex0, pos_i + offsets[6], 0).x;
+    float d7 = texelFetch(depthtex0, pos_i + offsets[7], 0).x;
+    float d8 = texelFetch(depthtex0, pos_i + offsets[8], 0).x;
 
     depthMin = min(min(min(min(d1, d2), min(d3, d4)), min(min(d5, d6), min(d7, d8))), depth);
     depthMax = max(max(max(max(d1, d2), max(d3, d4)), max(max(d5, d6), max(d7, d8))), depth);
+#else
+    // X-shaped depth neighborhood
+    float d5 = texelFetch(depthtex0, pos_i + offsets[5], 0).x;
+    float d6 = texelFetch(depthtex0, pos_i + offsets[6], 0).x;
+    float d7 = texelFetch(depthtex0, pos_i + offsets[7], 0).x;
+    float d8 = texelFetch(depthtex0, pos_i + offsets[8], 0).x;
 
+    depthMin = min(min(d5, d6), min(d7, d8));
+    depthMax = max(max(d5, d6), max(d7, d8));
+#endif
+
+#if TAA_QUALITY == 1
+    // Avoid interdependent texture samples
+    ivec2 offset = ivec2(0.0);
+#elif TAA_QUALITY == 2
+    // Use the velocity of closest neighbor
+    ivec2 offset = depthMin == depth ? offsets[0]
+        : depthMin == d5 ? offsets[5]
+        : depthMin == d6 ? offsets[6]
+        : depthMin == d7 ? offsets[7]
+        : offsets[8];
+#elif TAA_QUALITY == 3
+    // Use the velocity of closest neighbor
     ivec2 offset = depthMin == depth ? offsets[0]
         : depthMin == d1 ? offsets[1]
         : depthMin == d2 ? offsets[2]
@@ -131,8 +143,35 @@ void sampleCurrent(out vec3 velocity, out float depthMin, out float depth, out f
         : depthMin == d6 ? offsets[6]
         : depthMin == d7 ? offsets[7]
         : offsets[8];
+#endif
+        
+    velocity = texelFetch(colortex3, pos_i + offset, 0).xyz;
+}
+
+float getWeight(vec2 pos, vec2 prevPos, float depthMin, float depth, float depth_l, float depthMax, float depth_expected) {
     
-    velocity = texelFetch(colortex3, pos + offset, 0).xyz;
+    // Bounds based rejection
+    
+    if (prevPos.x < 0 || prevPos.y < 0 || prevPos.x > 1 || prevPos.y > 1) {
+        return 0.0;
+    }
+    float weight = 0.9;
+
+    // Depth-based rejection
+    float depthErr_min = linearizeDepth(depthMin) - depth_l;
+    float depthErr_max = linearizeDepth(depthMax) - depth_l;
+    float depth_pl = texture2D(colortex8, prevPos).x;
+    float depthErr = depth_pl - linearizeDepth(depth_expected);
+    weight *= clamp(1 - max(depthErr_min - depthErr, depthErr - depthErr_max), 0, 1);
+    
+    // Reprojection confidence
+    vec2 pixelErr2 = abs(fract(prevPos * vec2(viewWidth, viewHeight)) - 0.5);
+    vec2 pixelErr2_src = abs(fract(pos * vec2(viewWidth, viewHeight)) - 0.5);
+    float pixelErr = max(pixelErr2.x, pixelErr2.y);
+    float pixelErr_src = max(pixelErr2_src.x, pixelErr2_src.y);
+    weight *= 2.0 / (2.0 + pixelErr + 2.0 * pixelErr_src);
+    
+    return weight;
 }
 
 vec3 clip_aabb(vec3 aabb_min, vec3 aabb_max, vec3 q) {
@@ -150,16 +189,22 @@ vec3 clip_aabb(vec3 aabb_min, vec3 aabb_max, vec3 q) {
     }
 }
 
-vec3 clipAndMix(sampler2D tex, ivec2 texel, vec3 col_p, float alpha) {
-    vec3 col = texelFetch(tex, texel, 0).rgb;
-    vec2 tex_s = textureSize(tex, 0);
-    vec3 c0 = texture2D(tex, (texel + vec2( 1, 1)) / tex_s).rgb;
-    vec3 c1 = texture2D(tex, (texel + vec2(-1, 1)) / tex_s).rgb;
-    vec3 c2 = texture2D(tex, (texel + vec2( 1,-1)) / tex_s).rgb;
-    vec3 c3 = texture2D(tex, (texel + vec2(-1,-1)) / tex_s).rgb;
+vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weight) {
+    vec2 texel = pos * vec2(viewWidth, viewHeight);
+    vec3 col = texture2D(src, pos).rgb;
+    vec2 src_s = textureSize(src, 0);
+    vec3 c0 = texture2D(src, (texel + vec2( 1, 1)) / src_s).rgb;
+    vec3 c1 = texture2D(src, (texel + vec2(-1, 1)) / src_s).rgb;
+    vec3 c2 = texture2D(src, (texel + vec2( 1,-1)) / src_s).rgb;
+    vec3 c3 = texture2D(src, (texel + vec2(-1,-1)) / src_s).rgb;
     vec3 c_min = min(min(c0, c1), min(c2, c3));
     vec3 c_max = max(max(c0, c1), max(c2, c3));
+#if TAA_QUALITY == 1
+    vec3 col_p = texture2D(hist, historyPos).rgb;
+#else
+    vec3 col_p = resample_bspline(hist, historyPos);
+#endif
     col_p = clip_aabb(c_min, c_max, col_p);
-    col_p = mix(col, col_p, alpha);
+    col_p = mix(col, col_p, weight);
     return col_p;
 }

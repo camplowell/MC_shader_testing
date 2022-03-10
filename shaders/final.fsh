@@ -56,13 +56,21 @@ const int colortex9Format = RGB16;
 const bool colortex9Clear = false;
 */
 
+// Make the preprocessor warning go away
+#if !defined MC_RENDER_QUALITY
+#define MC_RENDER_QUALITY 1.0
+#endif
+
 void main() {
     if (MC_RENDER_QUALITY == 1.0) {
         ivec2 texel = ivec2(texcoord * vec2(viewWidth, viewHeight));
         gl_FragData[0] = texelFetch(colortex9, texel, 0);
     } else {
-        //gl_FragData[0] = texture2D(colortex9, texcoord);
+#if RESAMPLING_QUALITY == 0
+        gl_FragData[0] = texture2D(colortex9, texcoord);
+#else
         gl_FragData[0] = vec4(resample_bspline(colortex9, texcoord), 1.0);
+#endif
     }
 }
 
