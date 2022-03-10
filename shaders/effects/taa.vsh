@@ -26,6 +26,12 @@ copies or substantial portions of the Software.
 out vec2 texcoord;
 out vec2 counterJitter;
 
+out vec2 bl;
+out vec2 br;
+out vec2 tl;
+out vec2 tr;
+out mat2 cornerDepths;
+
 // Uniforms --------------------------------------------------------------------------------------
 
 // Other global variables ------------------------------------------------------------------------
@@ -36,6 +42,7 @@ out vec2 counterJitter;
 
 #include "/lib/common.glsl"
 #include "/lib/taa_jitter.glsl"
+#include "/lib/panini_projection.glsl"
 
 // ===============================================================================================
 // Helper declarations
@@ -50,7 +57,8 @@ void main() {
 
     texcoord = getTexCoord();
 	counterJitter = getJitter();
-	
+
+	getProjectionPlaneCorners(bl, br, tl, tr, cornerDepths);
 }
 
 // ===============================================================================================

@@ -26,6 +26,10 @@ copies or substantial portions of the Software.
 in  vec2 texcoord;
 in  vec2 counterJitter;
 
+in  vec2 bl;
+in  vec2 br;
+in  vec2 tl;
+in  vec2 tr;
 in  mat2 cornerDepths;
 
 // Uniforms --------------------------------------------------------------------------------------
@@ -49,6 +53,7 @@ const ivec2 offsets[9] = ivec2[9](ivec2( 0, 0),
 
 #include "/lib/common.glsl"
 #include "/lib/resampling.glsl"
+#include "/lib/panini_projection.glsl"
 
 // ===============================================================================================
 // Helper declarations
@@ -67,7 +72,7 @@ vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weig
 /* RENDERTARGETS: 8,9 */
 
 void main() {
-    vec2 pos = texcoord + counterJitter;
+    vec2 pos = panini(texcoord + counterJitter, bl, br, tl, tr, cornerDepths);
     //vec2 pos_col = ;
     vec3 velocity;
     float depthMin;
