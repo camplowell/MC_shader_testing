@@ -17,6 +17,8 @@ copies or substantial portions of the Software.
 #define GBUFFER
 #define VERTEX
 
+#include "/lib/common.glsl"
+
 // ===============================================================================================
 // Global variables
 // ===============================================================================================
@@ -26,11 +28,13 @@ copies or substantial portions of the Software.
 out vec2 texcoord;
 out vec2 counterJitter;
 
+#ifdef PANINI_ENABLE
 out vec2 bl;
 out vec2 br;
 out vec2 tl;
 out vec2 tr;
 out mat2 cornerDepths;
+#endif
 
 // Uniforms --------------------------------------------------------------------------------------
 
@@ -40,7 +44,7 @@ out mat2 cornerDepths;
 // Imports
 // ===============================================================================================
 
-#include "/lib/common.glsl"
+
 #include "/lib/taa_jitter.glsl"
 #include "/lib/panini_projection.glsl"
 
@@ -58,7 +62,11 @@ void main() {
     texcoord = getTexCoord();
 	counterJitter = getJitter();
 
+#ifdef PANINI_ENABLE
+
 	getProjectionPlaneCorners(bl, br, tl, tr, cornerDepths);
+
+#endif
 }
 
 // ===============================================================================================

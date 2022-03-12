@@ -20,7 +20,7 @@ copies or substantial portions of the Software.
 // ===============================================================================================
 // Global variables
 // ===============================================================================================
-
+#include "/lib/common.glsl"
 // Inputs and outputs ----------------------------------------------------------------------------
 
 in  vec2 texcoord;
@@ -35,12 +35,13 @@ in  mat2 cornerDepths;
 // Uniforms --------------------------------------------------------------------------------------
 
 uniform sampler2D colortex0; // Color
+#if TAA_QUALITY != 0
 uniform sampler2D colortex3; // Velocity
 uniform sampler2D depthtex0; // Depth
 
 uniform sampler2D colortex8; // Depth history
 uniform sampler2D colortex9; // Color history
-
+#endif
 // Other global variables ------------------------------------------------------------------------
 
 const ivec2 offsets[9] = ivec2[9](ivec2( 0, 0),
@@ -51,7 +52,6 @@ const ivec2 offsets[9] = ivec2[9](ivec2( 0, 0),
 // Imports
 // ===============================================================================================
 
-#include "/lib/common.glsl"
 #include "/lib/resampling.glsl"
 #include "/lib/panini_projection.glsl"
 
@@ -72,7 +72,15 @@ vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weig
 /* RENDERTARGETS: 8,9 */
 
 void main() {
+#ifdef PANINI_ENABLE
     vec2 pos = panini(texcoord + counterJitter, bl, br, tl, tr, cornerDepths);
+#else
+    vec2 pos = texcoord + counterJitter;
+#endif
+
+#if TAA_QUALITY == 0
+    gl_FragData[1] = texture2D(colortex0, pos);
+#else
     //vec2 pos_col = ;
     vec3 velocity;
     float depthMin;
@@ -91,12 +99,13 @@ void main() {
     gl_FragData[1] = vec4(color_p, 1.0);
     //gl_FragData[1] = vec4(vec3(weight), 1.0);
     //gl_FragData[1] = texture2D(colortex0, pos);
+#endif
 }
 
 // ===============================================================================================
 // Helper implementations
 // ===============================================================================================
-
+#if TAA_QUALITY != 0
 void sampleCurrent(vec2 pos, out vec3 velocity, out float depthMin, out float depth, out float depthMax) {
     vec2 tex_s = vec2(viewWidth, viewHeight);
     ivec2 pos_i = ivec2(pos * tex_s);
@@ -171,11 +180,13 @@ float getWeight(vec2 pos, vec2 prevPos, float depthMin, float depth, float depth
     
     // Reprojection confidence
     vec2 pixelErr2 = abs(fract(prevPos * vec2(viewWidth, viewHeight)) - 0.5);
-    vec2 pixelErr2_src = abs(fract(pos * vec2(viewWidth, viewHeight)) - 0.5);
+    vec2 pos_texel = pos * vec2(viewWidth, viewHeight);
+    float pos_vel = (length(dFdx(pos_texel)) + length(dFdy(pos_texel)));
+    pos_vel *= 0.5 * pos_vel;
+    vec2 pixelErr2_src = abs(fract(pos_texel) - 0.5);
     float pixelErr = max(pixelErr2.x, pixelErr2.y);
     float pixelErr_src = max(pixelErr2_src.x, pixelErr2_src.y);
-    weight *= 2.0 / (2.0 + pixelErr + 2.0 * pixelErr_src);
-    
+    weight *= 2.0 / (2.0 + 0.5 * pixelErr + pixelErr_src / (pos_vel * pos_vel));
     return weight;
 }
 
@@ -213,3 +224,4 @@ vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weig
     col_p = mix(col, col_p, weight);
     return col_p;
 }
+#endif
