@@ -15,7 +15,7 @@ copies or substantial portions of the Software.
 */
 
 #define GBUFFER
-#define FRAGMENT
+#define VERTEX
 
 // ===============================================================================================
 // Global variables
@@ -23,17 +23,11 @@ copies or substantial portions of the Software.
 
 // Inputs and outputs ----------------------------------------------------------------------------
 
-in  vec2 texcoord;
-in  vec2 lmcoord;
-in  vec4 glcolor;
-in  float ao;
-
-in  vec3 viewPos;
-in  vec3 prevViewPos;
+out vec2 texcoord;
+out vec4 glcolor;
+out float ao;
 
 // Uniforms --------------------------------------------------------------------------------------
-
-uniform sampler2D tex;
 
 // Other global variables ------------------------------------------------------------------------
 
@@ -42,28 +36,27 @@ uniform sampler2D tex;
 // ===============================================================================================
 
 #include "/lib/common.glsl"
+#include "/lib/taa_jitter.glsl"
 
 // ===============================================================================================
 // Helper declarations
 // ===============================================================================================
 
+vec3 getViewPos();
+vec4 getGlColor();
+float getAo();
+
 // ===============================================================================================
 // Main
 // ===============================================================================================
 
-/* RENDERTARGETS: 0 */
-
 void main() {
-    vec4 albedo = texture2D(tex, texcoord) * glcolor;
+    vec3 viewPos = getViewPos();
+    gl_Position = jitter(view2clip(viewPos));
 
-    vec3 color = albedo.rgb * ao;
-
-    gl_FragData[0] = vec4(color, albedo.a);
-
-    vec3 ndc = ndc2screen(view2ndc(viewPos, gbufferProjection));
-    vec3 prevNdc = ndc2screen(view2ndc(prevViewPos, gbufferPreviousProjection));
-
-    gl_FragData[1] = vec4((prevNdc - ndc), 1.0);
+    texcoord = getTexCoord();
+    glcolor = getGlColor();
+    ao = getAo();
 }
 
 // ===============================================================================================

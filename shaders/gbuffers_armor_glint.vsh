@@ -15,7 +15,7 @@ copies or substantial portions of the Software.
 */
 #version 410 compatibility
 
-#include "/surfaces/emissive.vsh"
+#include "/surfaces/decal.vsh"
 
 // ===============================================================================================
 // Local uniforms and constants

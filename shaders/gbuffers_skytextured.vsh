@@ -25,6 +25,10 @@ vec3 getViewPos() {
 	return model2view();
 }
 
+vec3 getPrevViewPos(vec3 viewPos) {
+	vec3 feetPos = view2feet_p(viewPos);
+	return feet2view(feetPos, gbufferPreviousModelView);
+}
 vec4 getGlColor() {
 	return gl_Color;
 }

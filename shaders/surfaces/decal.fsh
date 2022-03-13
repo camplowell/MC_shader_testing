@@ -28,9 +28,6 @@ in  vec2 lmcoord;
 in  vec4 glcolor;
 in  float ao;
 
-in  vec3 viewPos;
-in  vec3 prevViewPos;
-
 // Uniforms --------------------------------------------------------------------------------------
 
 uniform sampler2D tex;
@@ -59,11 +56,6 @@ void main() {
     vec3 color = albedo.rgb * ao;
 
     gl_FragData[0] = vec4(color, albedo.a);
-
-    vec3 ndc = ndc2screen(view2ndc(viewPos, gbufferProjection));
-    vec3 prevNdc = ndc2screen(view2ndc(prevViewPos, gbufferPreviousProjection));
-
-    gl_FragData[1] = vec4((prevNdc - ndc), 1.0);
 }
 
 // ===============================================================================================
