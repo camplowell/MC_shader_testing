@@ -19,20 +19,24 @@ copies or substantial portions of the Software.
 
 
 #if defined VERTEX
+uniform vec3 upPosition;
+out float panini_stereo_fac;
 // ===============================================================================================
 // Vertex operations
 // ===============================================================================================
 void getProjectionPlaneCorners(out vec2 bl, out vec2 br, out vec2 tl, out vec2 tr, out mat2 cornerDepths) {
+
+    panini_stereo_fac = abs(0.01 * upPosition.z);
     
     vec3 bl_c = -ndc2view_p(screen2ndc(vec3( 0, 0, 1)));
     vec3 br_c = -ndc2view_p(screen2ndc(vec3( 1, 0, 1)));
     vec3 tl_c = -ndc2view_p(screen2ndc(vec3( 0, 1, 1)));
     vec3 tr_c = -ndc2view_p(screen2ndc(vec3( 1, 1, 1)));
 
-    bl_c /= length(bl_c.xz);
-    br_c /= length(br_c.xz);
-    tl_c /= length(tl_c.xz);
-    tr_c /= length(tr_c.xz);
+    bl_c /= length(vec3(bl_c.xz, panini_stereo_fac * bl_c.y));
+    br_c /= length(vec3(br_c.xz, panini_stereo_fac * bl_c.y));
+    tl_c /= length(vec3(tl_c.xz, panini_stereo_fac * bl_c.y));
+    tr_c /= length(vec3(tr_c.xz, panini_stereo_fac * bl_c.y));
 
     cornerDepths[0][0] = bl_c.z;
     cornerDepths[1][0] = br_c.z;
@@ -43,9 +47,12 @@ void getProjectionPlaneCorners(out vec2 bl, out vec2 br, out vec2 tl, out vec2 t
     br = br_c.xy / br_c.z;
     tl = tl_c.xy / tl_c.z;
     tr = tr_c.xy / tr_c.z;
+
+    
 }
 
 #else
+in  float panini_stereo_fac;
 // ===============================================================================================
 // Fragment operations
 // ===============================================================================================
@@ -63,7 +70,8 @@ vec2 panini(vec2 pos, vec2 bl, vec2 br, vec2 tl, vec2 tr, mat2 cornerDepths) {
     // Map to unit cylinder
     vec3 cylinder = vec3(mix(mix(bl, br, pos.x), mix(tl, tr, pos.x), pos.y), 1.0);
     //cylinder /= length(cylinder.xz);
-    cylinder *= inversesqrt(cylinder.x * cylinder.x + 1.0);
+    float scaled_y = cylinder.y * panini_stereo_fac;
+    cylinder *= inversesqrt(cylinder.x * cylinder.x + 1.0 + scaled_y * scaled_y);
     // Reproject from further back
     vec3 reprojected = cylinder - vec3(0, 0, a);
     reprojected *= (depth_ref - a) / reprojected.z;

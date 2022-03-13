@@ -22,7 +22,11 @@ copies or substantial portions of the Software.
 // ===============================================================================================
 
 vec2 getJitter() {
+#if TAA_QUALITY == 0
+    return vec2(0);
+#else
     return (r2(frameCounter) - 0.5) / vec2(viewWidth, viewHeight);
+#endif
 }
 
 vec4 jitter(vec4 clipPos) {
