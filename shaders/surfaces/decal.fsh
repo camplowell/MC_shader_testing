@@ -51,7 +51,7 @@ uniform sampler2D tex;
 // Main
 // ===============================================================================================
 
-/* RENDERTARGETS: 0,3 */
+/* RENDERTARGETS: 0 */
 
 void main() {
     vec4 albedo = texture2D(tex, texcoord) * glcolor;
@@ -59,11 +59,6 @@ void main() {
     vec3 color = albedo.rgb * ao;
 
     gl_FragData[0] = vec4(color, albedo.a);
-
-    vec3 ndc = ndc2screen(view2ndc(viewPos, gbufferProjection));
-    vec3 prevNdc = ndc2screen(view2ndc(prevViewPos, gbufferPreviousProjection));
-
-    gl_FragData[1] = vec4((prevNdc - ndc), 1.0);
 }
 
 // ===============================================================================================

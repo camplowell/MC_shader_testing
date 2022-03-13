@@ -15,7 +15,7 @@ copies or substantial portions of the Software.
 */
 #version 410 compatibility
 
-#include "/surfaces/emissive.vsh"
+#include "/surfaces/decal.vsh"
 
 // ===============================================================================================
 // Local uniforms and constants
@@ -28,7 +28,8 @@ in vec3 at_velocity;
 // ===============================================================================================
 
 vec3 getViewPos() {
-	return model2view();
+	vec3 rawView = model2view();
+	return rawView + vec3(0, 0, 0);
 }
 
 vec4 getGlColor() {

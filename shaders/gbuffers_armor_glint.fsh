@@ -15,7 +15,7 @@ copies or substantial portions of the Software.
 */
 #version 410 compatibility
 
-#include "/surfaces/emissive.fsh"
+#include "/surfaces/decal.fsh"
 
 // ===============================================================================================
 // Helper implementations

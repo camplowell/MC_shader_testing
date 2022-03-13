@@ -27,6 +27,9 @@ out vec2 texcoord;
 out vec4 glcolor;
 out float ao;
 
+out vec3 viewPos;
+out vec3 prevViewPos;
+
 // Uniforms --------------------------------------------------------------------------------------
 
 // Other global variables ------------------------------------------------------------------------
@@ -36,12 +39,14 @@ out float ao;
 // ===============================================================================================
 
 #include "/lib/common.glsl"
+#include "/lib/taa_jitter.glsl"
 
 // ===============================================================================================
 // Helper declarations
 // ===============================================================================================
 
 vec3 getViewPos();
+vec3 getPrevViewPos(vec3 viewPos);
 vec4 getGlColor();
 float getAo();
 
@@ -50,8 +55,9 @@ float getAo();
 // ===============================================================================================
 
 void main() {
-    vec3 viewPos = getViewPos();
-    gl_Position = view2clip(viewPos);
+    viewPos = getViewPos();
+    prevViewPos = getPrevViewPos(viewPos);
+    gl_Position = jitter(view2clip(viewPos));
 
     texcoord = getTexCoord();
     glcolor = getGlColor();
