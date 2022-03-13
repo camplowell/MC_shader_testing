@@ -21,7 +21,7 @@ copies or substantial portions of the Software.
 // Large separator
 // ===============================================================================================
 
-#define TAA_QUALITY 2 // Determines the quality of TAA sampling to apply [1 2 3]
+#define TAA_QUALITY 2 // Determines the quality of TAA sampling to apply [0 1 2 3]
 
 #define RESAMPLING_QUALITY 0 // Quality of upscaling for render quality of < 1 [0 1]
 

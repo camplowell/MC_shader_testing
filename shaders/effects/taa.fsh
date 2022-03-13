@@ -31,6 +31,7 @@ in  mat2 cornerDepths;
 // Uniforms --------------------------------------------------------------------------------------
 
 uniform sampler2D colortex0; // Color
+
 uniform sampler2D colortex3; // Velocity
 uniform sampler2D depthtex0; // Depth
 
@@ -53,18 +54,26 @@ const ivec2 offsets[9] = ivec2[9](ivec2( 0, 0),
 // ===============================================================================================
 // Helper declarations
 // ===============================================================================================
-
+#if TAA_QUALITY != 0
 void sampleCurrent(vec2 pos, out vec3 velocity, out float depthMin, out float depth, out float depthMax);
 
 float getWeight(vec2 pos, vec2 prevPos, float depthMin, float depth, float depth_l, float depthMax, float depth_expected);
 
 vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weight);
-
+#endif
 // ===============================================================================================
 // Main
 // ===============================================================================================
 
 /* RENDERTARGETS: 8,9 */
+
+#if TAA_QUALITY == 0
+
+void main() {
+    gl_FragData[1] = texture2D(colortex0, texcoord);
+}
+
+#else
 
 void main() {
     vec2 pos = texcoord + counterJitter;
@@ -85,7 +94,8 @@ void main() {
     gl_FragData[0] = vec4(vec3(depth_l), 1.0);
     gl_FragData[1] = vec4(color_p, 1.0);
     //gl_FragData[1] = vec4(vec3(weight), 1.0);
-    //gl_FragData[1] = texture2D(colortex0, pos);
+    //gl_FragData[1] = texture2D(colortex3, pos) + 0.5;
+    //gl_FragData[1] = vec4(velocity, 1.0);
 }
 
 // ===============================================================================================
@@ -166,10 +176,8 @@ float getWeight(vec2 pos, vec2 prevPos, float depthMin, float depth, float depth
     
     // Reprojection confidence
     vec2 pixelErr2 = abs(fract(prevPos * vec2(viewWidth, viewHeight)) - 0.5);
-    vec2 pixelErr2_src = abs(fract(pos * vec2(viewWidth, viewHeight)) - 0.5);
     float pixelErr = max(pixelErr2.x, pixelErr2.y);
-    float pixelErr_src = max(pixelErr2_src.x, pixelErr2_src.y);
-    weight *= 2.0 / (2.0 + pixelErr + 2.0 * pixelErr_src);
+    weight *= 2.0 / (2.0 + pixelErr);
     
     return weight;
 }
@@ -208,3 +216,5 @@ vec3 getTAA(sampler2D src, sampler2D hist, vec2 pos, vec2 historyPos, float weig
     col_p = mix(col, col_p, weight);
     return col_p;
 }
+
+#endif
